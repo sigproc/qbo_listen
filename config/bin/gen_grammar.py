@@ -300,7 +300,7 @@ def compilegrammar(grammar,lang):
     phonemfile=AMdirectory+lang+"/"+"phonems"
     dstfiles=LMdirectory+lang+"/"+grammar+"/"+grammar
     createvoca(sentencefile,phonemfile,dstfiles)
-    subprocess.call(["mkdfa.pl", dstfiles])
+    subprocess.call(["mkdfa", dstfiles])
     
 def main(argv):
     if len(argv)==1 and argv[0]=="-v" or argv[0]=="-V" :
@@ -330,7 +330,7 @@ def main(argv):
                 copyfiles(tmpvoca,destfiles+".voca")
                 copyfiles(tmpgramm,destfiles+".grammar")
                 print "Compiling..."
-                subprocess.call(["mkdfa.pl", destfiles])
+                subprocess.call(["mkdfa", destfiles])
                 sys.exit(1)
             else:
                 print "ERROR: Not all phonemsi tiedlist"
