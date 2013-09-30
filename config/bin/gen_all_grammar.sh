@@ -21,8 +21,13 @@
 #
 # Authors: Sergio Merino <s.merino@openqbo.com>;
 
-dir="$ROS_PACKAGE_PATH/qbo_stack/qbo_listen/"
-#dir="$ROS_PACKAGE_PATH/qbo_stack/qbo_listen"
+# Search the ROS package path for the qbo_listen package
+while IFS=':' read -ra _base; do
+  if [ -d "$_base/qbo_listen/" ]; then
+    dir="$_base/qbo_listen/"
+  fi
+done <<< "$ROS_PACKAGE_PATH"
+
 acousticdir="/usr/share/qbo-julius-model/"
 tmpfile=/var/tmp/juliusdialog.tmp
 amdir=$acousticdir
@@ -40,15 +45,17 @@ finalconfigfile=$dir/config/julius.jconf
 function createConfFile {
 IFS=$'\n'
 > $tmpfile
-languages=`ls -l $lmdir | grep -vi total | awk -F" " '{print $8}'`
-for line in $languages; do
+languages=`find $lmdir -mindepth 1 -maxdepth 1 -type d`
+for line_ in $languages; do
+	line=`basename $line_`
         echo "-AM $line" >> $tmpfile
 #        echo "-ssload noiseSpec" >> $tmpfile
         echo "-h $Ramdir$line/hmmdefs" >> $tmpfile
         echo "-hlist $Ramdir$line/tiedlist" >> $tmpfile
 	echo "" >> $tmpfile
-	LMs=`ls -l $lmdir$line | grep -vi total | awk -F" " '{print $8}'`
-        for lm in $LMs; do
+	LMs=`find $lmdir/$line -mindepth 1 -maxdepth 1 -type d`
+        for lm_ in $LMs; do
+		lm=`basename $lm_`
 		echo "-LM $line$lm" >> $tmpfile
 
 #		if [ $lm != "default" ]
@@ -74,10 +81,12 @@ cat $preconfigfile $tmpfile > $finalconfigfile
 function compileLMs {
 IFS=$'\n'
 
-languages=`ls -l $amdir | grep -vi total | awk -F" " '{print $8}'`
-for line in $languages; do
-	LMs=`ls -l $lmdir$line | grep -vi total | awk -F" " '{print $8}'`
-	for lm in $LMs; do
+languages=`find $amdir -mindepth 1 -maxdepth 1 -type d`
+for line_ in $languages; do
+	line=`basename $line_`
+	LMs=`find $lmdir/$line -mindepth 1 -maxdepth 1 -type d`
+	for lm_ in $LMs; do
+		lm=`basename $lm_`
 		echo "---------------------------------------------------------------------------------------------------------------"
 		echo "Next To Process:"
 		echo "  Language: $line"
@@ -109,7 +118,7 @@ done
 }
 
 
-cd "$ROS_PACKAGE_PATH/qbo_stack/qbo_listen/config/bin"
+cd "$dir/config/bin"
 if [ "$1" == "-f" ]; then
     compileLMs "force"
 else
